@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from "axios"
 import { BusFront, ChevronRight, Eye, EyeOff, LockKeyhole, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Field, Notice, inputClass } from '../components/ui.jsx';
@@ -28,13 +29,12 @@ export function ResetPassword() {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/auth/resetPassword/${resetPasswordToken}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword, confirmNewPassword }),
+      const response = await axios.post(`http://localhost:4000/api/auth/reset-password/${resetPasswordToken}`,{
+        "newPassword" : newPassword ,
+        "confirmNewPassword" : confirmNewPassword
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Something went wrong.');
+
+      const data = response.data ;
       setSuccess(data.message || 'Password reset successfully! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
