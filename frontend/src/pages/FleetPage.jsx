@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/Dialog.jsx';
 import { Button, Field, Notice, PageHeading, StatusBadge, inputClass } from '../components/ui.jsx';
 import { money } from '../data/seed.js';
@@ -8,18 +8,34 @@ import * as api from '../api.js';
 
 const emptyForm = { regNo: '', model: '', type: 'Truck', capacity: '', odometer: '', cost: '', status: 'Available' };
 
-export function FleetPage({ vehicles, token, reload }) {
+export function FleetPage({ vehicles, token, reload, role }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('All');
   const [status, setStatus] = useState('All');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [notice, setNotice] = useState('');
   const [formError, setFormError] = useState('');
   const [form, setForm] = useState(emptyForm);
 
   const result = useMemo(() => vehicles.filter((vehicle) => `${vehicle.regNo} ${vehicle.model}`.toLowerCase().includes(query.toLowerCase()) && (type === 'All' || vehicle.type === type) && (status === 'All' || vehicle.status === status)), [vehicles, query, type, status]);
   const updateForm = (field, value) => {setForm((current) => ({ ...current, [field]: value }));setFormError('');};
+
+  const remove = async (vehicleId) => {
+    if (!window.confirm('Delete this vehicle from the registry?')) return;
+    setDeletingId(vehicleId);
+    setNotice('');
+    try {
+      await api.deleteVehicle(token, vehicleId);
+      await reload();
+      setNotice('Vehicle removed.');
+    } catch (err) {
+      setNotice(err.message || 'Failed to delete vehicle.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const add = async (event) => {
     event.preventDefault();
@@ -59,7 +75,48 @@ export function FleetPage({ vehicles, token, reload }) {
       </div>{formError && <div className="mt-4"><Notice kind="error">{formError}</Notice></div>}<DialogFooter><Button type="button" variant="secondary" onClick={() => setIsAddOpen(false)}>Cancel</Button><Button type="submit" loading={loading}>Add to registry</Button></DialogFooter></form></DialogContent></Dialog>
       {notice && <div className="mb-4"><Notice kind="success">{notice}</Notice></div>}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row"><div className="relative flex-1"><Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-600" /><input value={query} onChange={(event) => setQuery(event.target.value)} className={`${inputClass} pl-9`} placeholder="Search registration no. or model" /></div><select className={inputClass} value={type} onChange={(event) => setType(event.target.value)}>{['All', 'Truck', 'Van', 'Mini'].map((item) => <option key={item}>{item}</option>)}</select><select className={inputClass} value={status} onChange={(event) => setStatus(event.target.value)}>{['All', 'Available', 'On Trip', 'In Shop', 'Retired'].map((item) => <option key={item}>{item}</option>)}</select></div>
-      <section className="overflow-hidden rounded-lg border border-[#2a2a2d] bg-[#1a1a1c]"><div className="overflow-x-auto"><table className="w-full min-w-[920px] text-left"><thead className="border-b border-[#2a2a2d] text-[10px] uppercase tracking-[0.12em] text-zinc-500"><tr>{['Reg no.', 'Name / model', 'Type', 'Capacity', 'Odometer', 'Acquisition cost', 'Status'].map((header) => <th key={header} className="px-4 py-3 font-medium">{header}</th>)}</tr></thead><tbody>{result.map((vehicle) => <tr key={vehicle.id} className="border-b border-[#27272a] text-xs last:border-0"><td className="px-4 py-3 font-mono text-[#e6a25e]">{vehicle.regNo}</td><td className="px-4 py-3 font-medium">{vehicle.model}</td><td className="px-4 py-3 text-zinc-400">{vehicle.type}</td><td className="px-4 py-3">{vehicle.capacity.toLocaleString('en-IN')} kg</td><td className="px-4 py-3 text-zinc-400">{vehicle.odometer.toLocaleString('en-IN')} km</td><td className="px-4 py-3">{money(vehicle.cost)}</td><td className="px-4 py-3"><StatusBadge status={vehicle.status} /></td></tr>)}</tbody></table>{result.length === 0 && <div className="py-12 text-center text-xs text-zinc-500">No vehicles match your filters.</div>}</div></section>
+      <section className="overflow-hidden rounded-lg border border-[#2a2a2d] bg-[#1a1a1c]">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[920px] text-left">
+            <thead className="border-b border-[#2a2a2d] text-[10px] uppercase tracking-[0.12em] text-zinc-500">
+              <tr>
+                {(() => {
+                  const cols = ['Reg no.', 'Name / model', 'Type', 'Capacity', 'Odometer', 'Acquisition cost', 'Status'];
+                  if (role === 'Fleet Manager') cols.push('Actions');
+                  return cols.map((header) => <th key={header} className="px-4 py-3 font-medium">{header}</th>);
+                })()}
+              </tr>
+            </thead>
+            <tbody>
+              {result.map((vehicle) => (
+                <tr key={vehicle.id} className="border-b border-[#27272a] text-xs last:border-0">
+                  <td className="px-4 py-3 font-mono text-[#e6a25e]">{vehicle.regNo}</td>
+                  <td className="px-4 py-3 font-medium">{vehicle.model}</td>
+                  <td className="px-4 py-3 text-zinc-400">{vehicle.type}</td>
+                  <td className="px-4 py-3">{vehicle.capacity.toLocaleString('en-IN')} kg</td>
+                  <td className="px-4 py-3 text-zinc-400">{vehicle.odometer.toLocaleString('en-IN')} km</td>
+                  <td className="px-4 py-3">{money(vehicle.cost)}</td>
+                  <td className="px-4 py-3"><StatusBadge status={vehicle.status} /></td>
+                  {role === 'Fleet Manager' && (
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => remove(vehicle.id)}
+                        disabled={deletingId === vehicle.id}
+                        className="inline-flex items-center gap-1.5 rounded border border-rose-500/40 px-2.5 py-1.5 text-[11px] text-rose-200 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {deletingId === vehicle.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {result.length === 0 && <div className="py-12 text-center text-xs text-zinc-500">No vehicles match your filters.</div>}
+        </div>
+      </section>
       <p className="mt-3 text-[11px] text-rose-300">Registration numbers must be unique. Retired and In Shop vehicles are excluded from the Trip Dispatcher.</p>
     </>);
 

@@ -111,6 +111,14 @@ export const createVehicle = async (token, body) => {
   return normVehicle(await handle(res));
 };
 
+export const deleteVehicle = async (token, id) => {
+  const res = await fetch(`${BASE}/vehicles/${id}`, {
+    method: 'DELETE',
+    headers: headers(token),
+  });
+  return handle(res);
+};
+
 /* ───── Drivers ───── */
 
 export const fetchDrivers = async (token) => {

@@ -99,7 +99,7 @@ export function App() {
           </ProtectedApp>
         } />
         <Route path="/dashboard" element={<ProtectedApp role={role} onLogout={logout}><DashboardPage vehicles={vehicles} drivers={drivers} trips={trips} /></ProtectedApp>} />
-        <Route path="/fleet" element={<ProtectedApp role={role} onLogout={logout}><FleetPage vehicles={vehicles} token={token} reload={reload} /></ProtectedApp>} />
+        <Route path="/fleet" element={<ProtectedApp role={role} onLogout={logout}><FleetPage vehicles={vehicles} token={token} reload={reload} role={role} /></ProtectedApp>} />
         <Route path="/drivers" element={<ProtectedApp role={role} onLogout={logout}><DriversPage drivers={drivers} token={token} reload={reload} /></ProtectedApp>} />
         <Route path="/trips" element={<ProtectedApp role={role} onLogout={logout}><TripsPage vehicles={vehicles} drivers={drivers} trips={trips} token={token} reload={reload} /></ProtectedApp>} />
         <Route path="/maintenance" element={<ProtectedApp role={role} onLogout={logout}><MaintenancePage vehicles={vehicles} logs={serviceLogs} token={token} reload={reload} /></ProtectedApp>} />

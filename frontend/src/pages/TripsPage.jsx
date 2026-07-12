@@ -116,6 +116,26 @@ export function TripsPage({
                   <div className="mt-3 flex items-center justify-between text-[11px] text-zinc-500">
                     <span>{vehicle?.regNo} · {driver?.name}</span><span>{trip.eta}</span>
                   </div>
+                  {trip.status === 'Dispatched' && (() => {
+                    const speedKmh = 65;
+                    const elapsedHours = (Date.now() - new Date(trip.createdAt || Date.now()).getTime()) / (1000 * 60 * 60);
+                    const covered = Math.min(trip.distance, Math.max(0, Math.round(elapsedHours * speedKmh * 10) / 10));
+                    const percent = trip.distance > 0 ? Math.min(100, Math.max(0, Math.round((covered / trip.distance) * 100))) : 0;
+                    return (
+                      <div className="mt-3.5 space-y-1.5 border-t border-[#303034] pt-3">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-zinc-500">Distance covered</span>
+                          <span className="font-semibold text-[#e6a25e]">{covered} km / {trip.distance} km ({percent}%)</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-[#202023] overflow-hidden">
+                          <div 
+                            className="h-full rounded-full bg-gradient-to-r from-[#d98a3d] to-[#e6a25e] transition-all duration-500" 
+                            style={{ width: `${percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
                   {trip.status === 'Dispatched' &&
                   <div className="mt-3 flex gap-2">
                       <Button className="py-1.5" onClick={() => updateTrip(trip, 'Completed')}>
