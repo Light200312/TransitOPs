@@ -34,6 +34,7 @@ const nav = [
 
 export function AppShell({ role, name, onLogout, children }) {
   const [open, setOpen] = useState(false);
+  const storedCompany = typeof window !== 'undefined' ? window.localStorage.getItem('transitops-company-name') : '';
   const [isLightTheme, setIsLightTheme] = useState(() => {
     if (typeof window === 'undefined') return false;
     return window.localStorage.getItem('transitops-theme') === 'light';
@@ -172,7 +173,7 @@ export function AppShell({ role, name, onLogout, children }) {
 
             <div className="hidden text-right sm:block">
               <p className="text-xs font-medium text-zinc-200">{name}</p>
-              <p className="text-[10px] text-zinc-500">Gandhinagar Depot</p>
+              <p className="text-[10px] text-zinc-500">{storedCompany || (name.includes('·') ? name.split('·')[1].trim() : 'Fleet workspace')}</p>
             </div>
 
             <StatusBadge status="Active" />

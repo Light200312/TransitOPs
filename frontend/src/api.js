@@ -71,25 +71,25 @@ const normExpense = (e) => ({
 
 /* ───── Auth ───── */
 
-export const login = async (email, password, role) => {
+export const login = async (email, password, role, companyName = '', companyLocation = '') => {
   const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ email, password, role }),
+    body: JSON.stringify({ email, password, role, companyName, companyLocation }),
   });
   return handle(res);
 };
 
-export const register = async (name, email, password, role, companyData = {}) => {
+export const register = async (name, email, password, role, companyName = '', companyLocation = '') => {
   const res = await fetch(`${BASE}/auth/register`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ name, email, password, role, ...companyData }),
+    body: JSON.stringify({ name, email, password, role, companyName, companyLocation }),
   });
   return handle(res);
 };
 
-export const fetchCompanies = async () => {
+export const fetchCompanyOptions = async () => {
   const res = await fetch(`${BASE}/auth/companies`, { headers: headers() });
   return handle(res);
 };

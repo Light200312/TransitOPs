@@ -11,6 +11,8 @@ const roleList = [
   ['Financial Analyst', 'Fuel, expenses & analytics'],
   ['Driver', 'Assigned jobs only']];
 
+const fallbackCompanyOptions = ['Gujarat Logistics', 'Metro Cargo', 'Swift Freight', 'NorthStar Transport', 'BlueLine Express'];
+
 export function LoginPage({ onLogin }) {
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
@@ -20,8 +22,8 @@ export function LoginPage({ onLogin }) {
   const [companyName, setCompanyName] = useState('');
   const [companyLocation, setCompanyLocation] = useState('');
   const [companySearch, setCompanySearch] = useState('');
-  const [companyOptions, setCompanyOptions] = useState([]);
-  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+  const [companyOptions, setCompanyOptions] = useState(fallbackCompanyOptions);
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,19 +37,8 @@ export function LoginPage({ onLogin }) {
       setCompanyLocation('');
     }
     setCompanySearch('');
+    setShowCompanyDropdown(false);
   };
-
-  useEffect(() => {
-    const loadCompanies = async () => {
-      try {
-        const data = await api.fetchCompanies();
-        setCompanyOptions(data.map((item) => item.name));
-      } catch (err) {
-        console.error('Failed to load companies', err);
-      }
-    };
-    loadCompanies();
-  }, []);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -62,17 +53,15 @@ export function LoginPage({ onLogin }) {
     setLoading(true);
     setError('');
     try {
+      const companyValue = role === 'Fleet Manager' ? companyName.trim() : (companySearch.trim() || companyName.trim());
+      const companyLocationValue = role === 'Fleet Manager' ? companyLocation.trim() : '';
       let data;
       if (isRegister) {
-        data = await api.register(name.trim(), email, password, role, {
-          companyName: role === 'Fleet Manager' ? companyName.trim() : companySearch.trim(),
-          companyLocation: role === 'Fleet Manager' ? companyLocation.trim() : '',
-          company: role === 'Fleet Manager' ? companyName.trim() : companySearch.trim(),
-        });
+        data = await api.register(name.trim(), email, password, role, companyValue, companyLocationValue);
       } else {
-        data = await api.login(email, password, role);
+        data = await api.login(email, password, role, companyValue, companyLocationValue);
       }
-      onLogin(data.token, data.role, data.name);
+      onLogin(data.token, data.role, data.name, data.companyName || companyValue);
       navigate(data.role === 'Driver' ? '/jobs' : '/dashboard');
     } catch (err) {
       setError(err.message || 'Authentication failed.');
@@ -81,12 +70,41 @@ export function LoginPage({ onLogin }) {
     }
   };
 
-  const filteredCompanies = companyOptions.filter((item) => item.toLowerCase().includes(companySearch.toLowerCase()));
+  useEffect(() => {
+    let ignore = false;
+    const loadCompanies = async () => {
+      try {
+        const data = await api.fetchCompanyOptions();
+        if (!ignore) {
+          setCompanyOptions(Array.isArray(data) && data.length ? data : fallbackCompanyOptions);
+        }
+      } catch (error) {
+        if (!ignore) {
+          setCompanyOptions(fallbackCompanyOptions);
+        }
+      }
+    };
 
-  const selectCompany = (company) => {
-    setCompanySearch(company);
-    setIsCompanyDropdownOpen(false);
-  };
+    loadCompanies();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const normalizedQuery = companySearch.trim().toLowerCase();
+  const filteredCompanies = [...companyOptions]
+    .filter((item) => {
+      const value = item.toLowerCase();
+      return !normalizedQuery || value.startsWith(normalizedQuery) || value.includes(normalizedQuery);
+    })
+    .sort((a, b) => {
+      const aStarts = a.toLowerCase().startsWith(normalizedQuery);
+      const bStarts = b.toLowerCase().startsWith(normalizedQuery);
+      if (normalizedQuery && aStarts !== bStarts) {
+        return aStarts ? -1 : 1;
+      }
+      return a.localeCompare(b);
+    });
 
   return (
     <main className="min-h-screen bg-[#0f0f10] text-[#edeae3] lg:grid lg:grid-cols-2">
@@ -141,7 +159,39 @@ export function LoginPage({ onLogin }) {
             {isRegister && role === 'Fleet Manager' && (
               <>
                 <Field label="Company name">
-                  <input className={inputClass} value={companyName} onChange={(event) => { setCompanyName(event.target.value); setError(''); }} placeholder="Enter company name" />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-600" />
+                    <input
+                      className={`${inputClass} pl-9`}
+                      value={companyName}
+                      onChange={(event) => {
+                        setCompanyName(event.target.value);
+                        setError('');
+                        setShowCompanyDropdown(true);
+                      }}
+                      onFocus={() => setShowCompanyDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 120)}
+                      placeholder="Search or enter company name"
+                    />
+                    {showCompanyDropdown && filteredCompanies.length > 0 && (
+                      <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-[#343438] bg-[#151517] shadow-lg">
+                        {filteredCompanies.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            className="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-200 hover:bg-[#202023]"
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              setCompanyName(item);
+                              setShowCompanyDropdown(false);
+                            }}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </Field>
                 <Field label="Company location">
                   <div className="relative">
@@ -160,24 +210,26 @@ export function LoginPage({ onLogin }) {
                     value={companySearch}
                     onChange={(event) => {
                       setCompanySearch(event.target.value);
-                      setIsCompanyDropdownOpen(true);
+                      setShowCompanyDropdown(true);
                     }}
-                    onFocus={() => setIsCompanyDropdownOpen(true)}
-                    onBlur={() => setTimeout(() => setIsCompanyDropdownOpen(false), 120)}
-                    placeholder="Search company"
+                    onFocus={() => setShowCompanyDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 120)}
+                    placeholder="Search company by name"
                   />
-                  {isCompanyDropdownOpen && filteredCompanies.length > 0 && (
-                    <div className="absolute z-10 mt-1 max-h-44 w-full overflow-auto rounded-md border border-[#2a2a2d] bg-[#17171a] shadow-lg">
+                  {showCompanyDropdown && filteredCompanies.length > 0 && (
+                    <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-[#343438] bg-[#151517] shadow-lg">
                       {filteredCompanies.map((item) => (
                         <button
                           key={item}
                           type="button"
-                          className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-zinc-200 hover:bg-[#232327]"
+                          className="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-200 hover:bg-[#202023]"
                           onMouseDown={(event) => event.preventDefault()}
-                          onClick={() => selectCompany(item)}
+                          onClick={() => {
+                            setCompanySearch(item);
+                            setShowCompanyDropdown(false);
+                          }}
                         >
-                          <span>{item}</span>
-                          <span className="text-[10px] uppercase tracking-[0.12em] text-zinc-500">Select</span>
+                          {item}
                         </button>
                       ))}
                     </div>

@@ -29,10 +29,15 @@ const userSchema = new mongoose.Schema(
       enum: ROLES,
       default: "Driver",
     },
-    company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      default: null,
+    companyName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    companyLocation: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   { timestamps: true }
