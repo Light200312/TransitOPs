@@ -80,12 +80,17 @@ export const login = async (email, password, role) => {
   return handle(res);
 };
 
-export const register = async (name, email, password, role) => {
+export const register = async (name, email, password, role, companyData = {}) => {
   const res = await fetch(`${BASE}/auth/register`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ name, email, password, role }),
+    body: JSON.stringify({ name, email, password, role, ...companyData }),
   });
+  return handle(res);
+};
+
+export const fetchCompanies = async () => {
+  const res = await fetch(`${BASE}/auth/companies`, { headers: headers() });
   return handle(res);
 };
 

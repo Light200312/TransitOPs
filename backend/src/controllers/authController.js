@@ -1,8 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const crypto = require("crypto");
-const {sendEmail , resetPasswordMail} = require("../utils/mail.js") ;
-
+const Company = require("../models/Company");
 
 /**
  * Generate a JWT for the given user id.
@@ -18,20 +16,49 @@ const generateToken = (id) => {
  * Register a new user (for seeding / admin use).
  */
 const register = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, companyName, companyLocation, company } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res.status(409).json({ message: "User with this email already exists" });
   }
 
-  const user = await User.create({ name, email, password, role });
+  let companyRecord = null;
+  if (role === "Fleet Manager") {
+    const resolvedCompanyName = companyName?.trim();
+    const resolvedLocation = companyLocation?.trim();
+
+    if (!resolvedCompanyName) {
+      return res.status(400).json({ message: "Company name is required for Fleet Manager" });
+    }
+
+    companyRecord = await Company.findOneAndUpdate(
+      { name: resolvedCompanyName },
+      { $set: { name: resolvedCompanyName, location: resolvedLocation || "" } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  } else if (company?.trim()) {
+    companyRecord = await Company.findOneAndUpdate(
+      { name: company.trim() },
+      { $set: { name: company.trim(), location: companyLocation?.trim() || "" } },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role,
+    company: companyRecord?._id || null,
+  });
 
   res.status(201).json({
     _id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
+    company: companyRecord ? { _id: companyRecord._id, name: companyRecord.name, location: companyRecord.location } : null,
     token: generateToken(user._id),
   });
 };
@@ -73,71 +100,6 @@ const login = async (req, res) => {
   });
 };
 
-const forgetPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(400).json({ message: "No user with this email exists" })
-    }
-
-    const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryToken();
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = tokenExpiry;
-
-    await user.save({ validateBeforeSave: false });
-
-    await sendEmail({
-      email: user?.email,
-      subject: "Request to change password",
-      mailgenContent: resetPasswordMail(
-        user?.name,
-        `http://localhost:5173/resetPassword/${unHashedToken}`
-      )
-    });
-
-    return res.status(200).json({ message: "Email sent" });
-
-
-  } catch (error) {
-    return res.status(401).json({ message: `Error : ${error}` })
-  }
-}
-
-const resetPassword = async (req, res) => {
-  const { resetPasswordToken } = req.params;
-  const { newPassword, confirmNewPassword } = req.body;
-
-  if (newPassword !== confirmNewPassword) {
-    return res.status(400).json({ message: "Enter same password" })
-  }
-
-  const newHash = crypto.createHash("sha256").update(resetPasswordToken).digest("hex");
-
-  const user = await User.findOne({
-    resetPasswordToken: newHash,
-    resetPasswordExpires: { $gt: Date.now() }
-  });
-
-  if (!user) { return res.status(400).json({ message: "Time limit exceeded , Please try again" }) }
-
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpires = undefined;
-
-  user.password = newPassword;
-
-  await user.save({ validateBeforeSave: false });
-
-  return res
-    .status(201)
-    .json(
-      { message: "Password reset succesfully" }
-    )
-
-}
-
 /**
  * GET /api/auth/me
  * Return the currently authenticated user's profile.
@@ -151,4 +113,9 @@ const getMe = async (req, res) => {
   });
 };
 
-module.exports = { register, login, getMe , forgetPassword , resetPassword };
+const listCompanies = async (req, res) => {
+  const companies = await Company.find({}).sort({ name: 1 }).lean();
+  res.json(companies);
+};
+
+module.exports = { register, login, getMe, listCompanies };
