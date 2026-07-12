@@ -13,7 +13,16 @@ export const seedDrivers = [
 { id: 'd2', name: 'Nitin Shah', license: 'GJ-18-20150644210', category: 'HMV', expiry: '2027-09-23', contact: '+91 99041 88413', completion: 96, safety: 91, status: 'Available' },
 { id: 'd3', name: 'Jignesh Prajapati', license: 'GJ-01-20180990841', category: 'LMV', expiry: '2026-11-18', contact: '+91 98989 45231', completion: 93, safety: 88, status: 'Available' },
 { id: 'd4', name: 'Kiran Solanki', license: 'GJ-27-20140433211', category: 'HMV', expiry: '2025-02-09', contact: '+91 97248 90672', completion: 87, safety: 72, status: 'Suspended' },
-{ id: 'd5', name: 'Mahesh Vaghela', license: 'GJ-18-20161344562', category: 'LMV', expiry: '2027-01-05', contact: '+91 98791 31026', completion: 91, safety: 84, status: 'Off Duty' }];
+{ id: 'd5', name: 'Mahesh Vaghela', license: 'GJ-18-20161344562', category: 'LMV', expiry: '2027-01-05', contact: '+91 98791 31026', completion: 91, safety: 84, status: 'Off Duty' },
+{ id: 'd6', name: 'Vikram Singh', license: 'GJ-01-20190566321', category: 'HMV', expiry: '2029-08-22', contact: '+91 99042 11234', completion: 99, safety: 97, status: 'Available' },
+{ id: 'd7', name: 'Amit Desai', license: 'GJ-27-20150899441', category: 'LMV', expiry: '2025-05-10', contact: '+91 97241 88765', completion: 85, safety: 78, status: 'Off Duty' },
+{ id: 'd8', name: 'Sanjay Joshi', license: 'GJ-18-20220133980', category: 'HMV', expiry: '2030-01-15', contact: '+91 98980 66543', completion: 94, safety: 92, status: 'On Trip' },
+{ id: 'd9', name: 'Deepak Chauhan', license: 'GJ-01-20170788123', category: 'HMV', expiry: '2028-12-01', contact: '+91 98765 43210', completion: 96, safety: 90, status: 'Available' },
+{ id: 'd10', name: 'Harish Rathod', license: 'GJ-27-20130255674', category: 'HMV', expiry: '2027-06-30', contact: '+91 99120 55678', completion: 89, safety: 81, status: 'On Trip' },
+{ id: 'd11', name: 'Pranav Trivedi', license: 'GJ-18-20200411298', category: 'LMV', expiry: '2029-03-14', contact: '+91 97890 12345', completion: 92, safety: 89, status: 'Available' },
+{ id: 'd12', name: 'Bhavesh Makwana', license: 'GJ-01-20160977541', category: 'HMV', expiry: '2026-08-20', contact: '+91 98410 77890', completion: 88, safety: 76, status: 'Suspended' },
+{ id: 'd13', name: 'Rajesh Parmar', license: 'GJ-27-20210344567', category: 'LMV', expiry: '2030-11-05', contact: '+91 99870 33456', completion: 95, safety: 93, status: 'Off Duty' },
+{ id: 'd14', name: 'Suresh Gohel', license: 'GJ-18-20190622890', category: 'HMV', expiry: '2028-07-18', contact: '+91 98230 99876', completion: 90, safety: 85, status: 'Available' }];
 
 
 export const seedTrips = [
