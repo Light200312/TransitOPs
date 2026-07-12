@@ -88,10 +88,10 @@ export function App() {
       <Routes>
         <Route path="/login" element={role ? <Navigate to={appHome} replace /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/jobs" element={
-        <ProtectedApp role={role} onLogout={logout} allowDriver>
+          <ProtectedApp role={role} onLogout={logout} allowDriver>
             {role === 'Driver' ?
-          <JobsPage trips={trips} vehicles={vehicles} token={token} reload={reload} /> :
-          <Navigate to="/dashboard" replace />}
+              <JobsPage trips={trips} vehicles={vehicles} token={token} reload={reload} /> :
+              <Navigate to="/dashboard" replace />}
           </ProtectedApp>
         } />
         <Route path="/dashboard" element={<ProtectedApp role={role} onLogout={logout}><DashboardPage vehicles={vehicles} drivers={drivers} trips={trips} /></ProtectedApp>} />

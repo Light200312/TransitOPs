@@ -5,11 +5,11 @@ import { Button, Field, Notice, inputClass } from '../components/ui.jsx';
 import * as api from '../api.js';
 
 const roleList = [
-['Fleet Manager', 'Fleet, maintenance & dispatch'],
-['Dispatcher', 'Dashboard & trips'],
-['Safety Officer', 'Drivers & compliance'],
-['Financial Analyst', 'Fuel, expenses & analytics'],
-['Driver', 'Assigned jobs only']];
+  ['Fleet Manager', 'Fleet, maintenance & dispatch'],
+  ['Dispatcher', 'Dashboard & trips'],
+  ['Safety Officer', 'Drivers & compliance'],
+  ['Financial Analyst', 'Fuel, expenses & analytics'],
+  ['Driver', 'Assigned jobs only']];
 
 
 export function LoginPage({ onLogin }) {
@@ -97,8 +97,8 @@ export function LoginPage({ onLogin }) {
                 </div>
               </Field>
             )}
-            <Field label="Email address"><div className="relative"><Mail className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-600" /><input className={`${inputClass} pl-9`} value={email} onChange={(event) => {setEmail(event.target.value);setError('');}} type="email" /></div></Field>
-            <Field label="Password"><div className="relative"><LockKeyhole className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-600" /><input className={`${inputClass} pl-9`} value={password} onChange={(event) => {setPassword(event.target.value);setError('');}} type="password" /></div></Field>
+            <Field label="Email address"><div className="relative"><Mail className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-600" /><input className={`${inputClass} pl-9`} value={email} onChange={(event) => { setEmail(event.target.value); setError(''); }} type="email" /></div></Field>
+            <Field label="Password"><div className="relative"><LockKeyhole className="absolute left-3 top-2.5 h-3.5 w-3.5 text-zinc-600" /><input className={`${inputClass} pl-9`} value={password} onChange={(event) => { setPassword(event.target.value); setError(''); }} type="password" /></div></Field>
             <Field label={isRegister ? 'Register as' : 'Sign in as'}><select className={inputClass} value={role} onChange={(event) => setRole(event.target.value)}>{roleList.map(([name]) => <option key={name}>{name}</option>)}</select></Field>
           </div>
           {!isRegister && (
