@@ -1,47 +1,36 @@
-import express, { urlencoded } from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
-import healthCheckRouter from "./routes/healthCheck.route.js";
-import { ApiError } from "./utils/api-error.js";
+require("express-async-errors");
+const express = require("express");
+const cors = require("cors");
+const errorHandler = require("./middleware/errorHandler");
 
+// Route imports
+const authRoutes = require("./routes/authRoutes");
+const vehicleRoutes = require("./routes/vehicleRoutes");
+const driverRoutes = require("./routes/driverRoutes");
+const tripRoutes = require("./routes/tripRoutes");
+const maintenanceRoutes = require("./routes/maintenanceRoutes");
+const financeRoutes = require("./routes/financeRoutes");
 
 const app = express();
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+// --------------- Middleware ---------------
+app.use(cors());
+app.use(express.json());
 
-app.use(cors({
-    origin: ["http://localhost:5173","http://localhost:5174"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-}))
-
-app.use(cookieParser());
-
-app.use("/api/healthcheck", healthCheckRouter);
-
-app.use((err, req, res, next) => {
-    if (err instanceof ApiError) {
-        return res
-            .status(err.statusCode)
-            .json({
-                success: err.success,
-                message: err.message,
-                errors: err.errors,
-                data: err.data
-            })
-    }
-
-    console.error(err);
-    return res.status(500).json({
-        success: false,
-        message: "Internal Server Error",
-    });
+// --------------- Health check ---------------
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get("/", (req, res) => {
-    res.send("hello world")
-});
+// --------------- API Routes ---------------
+app.use("/api/auth", authRoutes);
+app.use("/api/vehicles", vehicleRoutes);
+app.use("/api/drivers", driverRoutes);
+app.use("/api/trips", tripRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/finance", financeRoutes);
 
-export default app;
+// --------------- Error handler ---------------
+app.use(errorHandler);
+
+module.exports = app;

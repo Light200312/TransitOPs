@@ -1,22 +1,25 @@
 {
-  "name": "backend",
+  "name": "transitops-backend",
   "version": "1.0.0",
-  "description": "Odoo hackathon project",
-  "license": "ISC",
-  "author": "",
-  "type": "module",
-  "main": "index.js",
+  "description": "TransitOps — Smart Transport Operations Platform API",
+  "main": "src/index.js",
   "scripts": {
-    "dev": "nodemon ./src/index.js"
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/utils/seed.js"
   },
+  "keywords": ["transport", "fleet", "logistics"],
+  "license": "ISC",
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.7.4",
-    "nodemon": "^3.1.14"
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.13.2",
+    "express-async-errors": "^3.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }

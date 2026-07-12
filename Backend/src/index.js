@@ -1,16 +1,14 @@
-import dotenv from "dotenv"
-import "dotenv/config"
-import app from "./app.js"
-import { connectDB } from "./db/server.js";
-const port = process.env.PORT;
+require("dotenv").config();
+const app = require("./app");
+const connectDB = require("./DB/db");
 
-connectDB()
-    .then(() => {
-        app.listen(port, () => {
-            console.log(`http://localhost:${process.env.PORT}`);
-        })
-    })
-    .catch((error) => {
-        console.error(`DB connection failed : ${error}`)
-        process.exit(1);
-    })
+const PORT = process.env.PORT || 5000;
+
+const start = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`🚀 TransitOps API running on http://localhost:${PORT}`);
+  });
+};
+
+start();
