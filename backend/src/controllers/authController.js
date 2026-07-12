@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const Company = require("../models/Company");
 
 /**
  * Generate a JWT for the given user id.
@@ -16,33 +15,11 @@ const generateToken = (id) => {
  * Register a new user (for seeding / admin use).
  */
 const register = async (req, res) => {
-  const { name, email, password, role, companyName, companyLocation, company } = req.body;
+  const { name, email, password, role, companyName, companyLocation } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     return res.status(409).json({ message: "User with this email already exists" });
-  }
-
-  let companyRecord = null;
-  if (role === "Fleet Manager") {
-    const resolvedCompanyName = companyName?.trim();
-    const resolvedLocation = companyLocation?.trim();
-
-    if (!resolvedCompanyName) {
-      return res.status(400).json({ message: "Company name is required for Fleet Manager" });
-    }
-
-    companyRecord = await Company.findOneAndUpdate(
-      { name: resolvedCompanyName },
-      { $set: { name: resolvedCompanyName, location: resolvedLocation || "" } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
-  } else if (company?.trim()) {
-    companyRecord = await Company.findOneAndUpdate(
-      { name: company.trim() },
-      { $set: { name: company.trim(), location: companyLocation?.trim() || "" } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
   }
 
   const user = await User.create({
@@ -50,7 +27,8 @@ const register = async (req, res) => {
     email,
     password,
     role,
-    company: companyRecord?._id || null,
+    companyName: companyName?.trim() || "",
+    companyLocation: companyLocation?.trim() || "",
   });
 
   res.status(201).json({
@@ -58,7 +36,8 @@ const register = async (req, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
-    company: companyRecord ? { _id: companyRecord._id, name: companyRecord.name, location: companyRecord.location } : null,
+    companyName: user.companyName,
+    companyLocation: user.companyLocation,
     token: generateToken(user._id),
   });
 };
@@ -68,7 +47,7 @@ const register = async (req, res) => {
  * Authenticate user and return JWT + role.
  */
 const login = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, companyName, companyLocation } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
@@ -88,14 +67,25 @@ const login = async (req, res) => {
   // (frontend allows choosing a role at login)
   if (role && role !== user.role) {
     user.role = role;
-    await user.save();
   }
+
+  if (companyName && companyName.trim()) {
+    user.companyName = companyName.trim();
+  }
+
+  if (companyLocation && companyLocation.trim()) {
+    user.companyLocation = companyLocation.trim();
+  }
+
+  await user.save();
 
   res.json({
     _id: user._id,
     name: user.name,
     email: user.email,
     role: user.role,
+    companyName: user.companyName,
+    companyLocation: user.companyLocation,
     token: generateToken(user._id),
   });
 };
@@ -110,12 +100,24 @@ const getMe = async (req, res) => {
     name: req.user.name,
     email: req.user.email,
     role: req.user.role,
+    companyName: req.user.companyName,
+    companyLocation: req.user.companyLocation,
   });
 };
 
-const listCompanies = async (req, res) => {
-  const companies = await Company.find({}).sort({ name: 1 }).lean();
+const getCompanies = async (req, res) => {
+  const users = await User.find({
+    role: 'Fleet Manager',
+    companyName: { $exists: true, $ne: '' },
+  })
+    .select('companyName')
+    .lean();
+
+  const companies = [...new Set(users.map((user) => user.companyName).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b)
+  );
+
   res.json(companies);
 };
 
-module.exports = { register, login, getMe, listCompanies };
+module.exports = { register, login, getMe, getCompanies };

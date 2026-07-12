@@ -59,13 +59,18 @@ export function App() {
     if (token) reload();
   }, [token, reload]);
 
-  const handleLogin = (newToken, newRole, newUserName) => {
+  const handleLogin = (newToken, newRole, newUserName, newCompanyName) => {
     localStorage.setItem('transitops-token', newToken);
     localStorage.setItem('transitops-role', newRole);
     if (newUserName) {
       localStorage.setItem('transitops-user-name', newUserName);
     } else {
       localStorage.removeItem('transitops-user-name');
+    }
+    if (newCompanyName) {
+      localStorage.setItem('transitops-company-name', newCompanyName);
+    } else {
+      localStorage.removeItem('transitops-company-name');
     }
     setToken(newToken);
     setRole(newRole);
@@ -75,6 +80,7 @@ export function App() {
     localStorage.removeItem('transitops-token');
     localStorage.removeItem('transitops-role');
     localStorage.removeItem('transitops-user-name');
+    localStorage.removeItem('transitops-company-name');
     setToken(null);
     setRole(null);
     setVehicles([]);
