@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BusFront, ChevronRight, Eye, EyeOff, LockKeyhole, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Field, Notice, inputClass } from '../components/ui.jsx';
+import axios from 'axios';
 
 export function ResetPassword() {
   const { resetPasswordToken } = useParams();
@@ -28,13 +29,12 @@ export function ResetPassword() {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`http://localhost:4000/api/auth/reset-password/${resetPasswordToken}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword, confirmNewPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Something went wrong.');
+        const response = await axios.post(`http://localhost:4000/api/auth/reset-password/${resetPasswordToken}`,{
+          "newPassword" : newPassword ,
+          "confirmNewPassword" : confirmNewPassword
+        })
+      const data = response.data ;
+      if (!response.ok) throw new Error(data.message || 'Something went wrong.');
       setSuccess(data.message || 'Password reset successfully! Redirecting to login...');
       setTimeout(() => navigate('/login'), 2500);
     } catch (err) {

@@ -243,7 +243,10 @@ export function LoginPage({ onLogin }) {
               <label className="flex items-center gap-2 text-zinc-400">
                 <input type="checkbox" className="accent-[#d98a3d]" defaultChecked />Remember me
               </label>
-              <button type="button" className="text-[#e6a25e] hover:underline">Forgot password?</button>
+              <button onClick={(e) => {
+                e.preventDefault();
+                navigate("/forgetPassword")
+              }} type="button" className="text-[#e6a25e] hover:underline">Forgot password?</button>
             </div>
           )}
           <Button loading={loading} className="mt-7 w-full">

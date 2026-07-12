@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BusFront, ChevronRight, Mail, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Field, Notice, inputClass } from '../components/ui.jsx';
+import axios from 'axios';
 
 export function ForgetPassword() {
   const [email, setEmail] = useState('');
@@ -20,13 +21,11 @@ export function ForgetPassword() {
     setError('');
     setSuccess('');
     try {
-      const res = await fetch(`http://localhost:4000/api/auth/forgetPassword`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Something went wrong.');
+      const response = await axios.post(`http://localhost:4000/api/auth/forgetPassword`,{
+        "email" : email
+      })
+      const data = response.data ;
+      if (!response.ok) throw new Error(data.message || 'Something went wrong.');
       setSuccess(data.message || 'Password reset link sent to your email.');
     } catch (err) {
       setError(err.message || 'Failed to send reset link.');

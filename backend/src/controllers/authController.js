@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const crypto = require("crypto");
+const {sendEmail , resetPasswordMail }  = require("../utils/mail")
 
 /**
  * Generate a JWT for the given user id.
@@ -120,4 +122,68 @@ const getCompanies = async (req, res) => {
   res.json(companies);
 };
 
-module.exports = { register, login, getMe, getCompanies };
+const forgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "No user with this email exists" })
+    }
+
+    const { unHashedToken, hashedToken, tokenExpiry } = await user.generateTemporaryToken();
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = tokenExpiry;
+
+    await user.save({ validateBeforeSave: false });
+
+    await sendEmail({
+      email: user?.email,
+      subject: "Request to change password",
+      mailgenContent: resetPasswordMail(
+        user?.name,
+        `http://localhost:5173/resetPassword/${unHashedToken}`
+      )
+    });
+
+    return res.status(200).json({ message: "Email sent" });
+
+
+  } catch (error) {
+    return res.status(401).json({ message: `Error : ${error}` })
+  }
+}
+
+const resetPassword = async (req, res) => {
+  const { resetPasswordToken } = req.params;
+  const { newPassword, confirmNewPassword } = req.body;
+
+  if (newPassword !== confirmNewPassword) {
+    return res.status(400).json({ message: "Enter same password" })
+  }
+
+  const newHash = crypto.createHash("sha256").update(resetPasswordToken).digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: newHash,
+    resetPasswordExpires: { $gt: Date.now() }
+  });
+
+  if (!user) { return res.status(400).json({ message: "Time limit exceeded , Please try again" }) }
+
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  user.password = newPassword;
+
+  await user.save({ validateBeforeSave: false });
+
+  return res
+    .status(201)
+    .json(
+      { message: "Password reset succesfully" }
+    )
+}
+
+module.exports = { register, login, getMe, getCompanies , forgetPassword , resetPassword  };
