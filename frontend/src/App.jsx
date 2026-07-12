@@ -10,6 +10,8 @@ import { ExpensesPage } from './pages/ExpensesPage.jsx';
 import { FleetPage } from './pages/FleetPage.jsx';
 import { JobsPage } from './pages/JobsPage.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
+import { ForgetPassword } from './pages/ForgetPassword.jsx';
+import { ResetPassword } from './pages/ResetPassword.jsx';
 import { MaintenancePage } from './pages/MaintenancePage.jsx';
 import { SettingsPage } from './pages/SettingsPage.jsx';
 import { TripsPage } from './pages/TripsPage.jsx';
@@ -87,6 +89,8 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={role ? <Navigate to={appHome} replace /> : <LoginPage onLogin={handleLogin} />} />
+        <Route path="/forgetPassword" element={<ForgetPassword />} />
+        <Route path="/resetPassword/:resetPasswordToken" element={<ResetPassword />} />
         <Route path="/jobs" element={
           <ProtectedApp role={role} onLogout={logout} allowDriver>
             {role === 'Driver' ?
