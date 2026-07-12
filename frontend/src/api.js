@@ -4,7 +4,7 @@
  * components keep working with their current prop contracts (id, vehicleId, etc.).
  */
 
-const BASE = 'http://localhost:3000/api';
+const BASE = 'http://localhost:4000/api';
 
 /* ───── helpers ───── */
 
@@ -121,6 +121,14 @@ export const createDriver = async (token, body) => {
     body: JSON.stringify(body),
   });
   return normDriver(await handle(res));
+};
+
+export const deleteDriver = async (token, id) => {
+  const res = await fetch(`${BASE}/drivers/${id}`, {
+    method: 'DELETE',
+    headers: headers(token),
+  });
+  return handle(res);
 };
 
 /* ───── Trips ───── */

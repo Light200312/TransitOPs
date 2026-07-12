@@ -41,7 +41,7 @@ export function LoginPage({ onLogin }) {
       } else {
         data = await api.login(email, password, role);
       }
-      onLogin(data.token, data.role);
+      onLogin(data.token, data.role, data.name);
       navigate(data.role === 'Driver' ? '/jobs' : '/dashboard');
     } catch (err) {
       setError(err.message || 'Authentication failed.');

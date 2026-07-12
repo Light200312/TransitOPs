@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell.jsx';
 import * as api from './api.js';
@@ -15,13 +15,8 @@ import { SettingsPage } from './pages/SettingsPage.jsx';
 import { TripsPage } from './pages/TripsPage.jsx';
 
 function ProtectedApp({ role, onLogout, children, allowDriver = false }) {
-  const userName = useMemo(() => {
-    if (role === 'Driver') return 'Rakesh Patel';
-    if (role === 'Dispatcher') return 'Aarav Mehta';
-    if (role === 'Safety Officer') return 'Neha Shah';
-    if (role === 'Financial Analyst') return 'Vikram Joshi';
-    return 'Priya Desai';
-  }, [role]);
+  const savedName = typeof window !== 'undefined' ? window.localStorage.getItem('transitops-user-name') : '';
+  const userName = savedName || (role === 'Driver' ? 'Rakesh Patel' : role === 'Dispatcher' ? 'Aarav Mehta' : role === 'Safety Officer' ? 'Neha Shah' : role === 'Financial Analyst' ? 'Vikram Joshi' : 'Priya Desai');
 
   if (!role) return <Navigate to="/login" replace />;
   if (role === 'Driver' && !allowDriver) return <Navigate to="/jobs" replace />;
@@ -62,9 +57,14 @@ export function App() {
     if (token) reload();
   }, [token, reload]);
 
-  const handleLogin = (newToken, newRole) => {
+  const handleLogin = (newToken, newRole, newUserName) => {
     localStorage.setItem('transitops-token', newToken);
     localStorage.setItem('transitops-role', newRole);
+    if (newUserName) {
+      localStorage.setItem('transitops-user-name', newUserName);
+    } else {
+      localStorage.removeItem('transitops-user-name');
+    }
     setToken(newToken);
     setRole(newRole);
   };
@@ -72,6 +72,7 @@ export function App() {
   const logout = () => {
     localStorage.removeItem('transitops-token');
     localStorage.removeItem('transitops-role');
+    localStorage.removeItem('transitops-user-name');
     setToken(null);
     setRole(null);
     setVehicles([]);
