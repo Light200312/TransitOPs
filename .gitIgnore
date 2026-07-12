@@ -1,1 +1,14 @@
-frontend
+# Node / package manager
+node_modules/
+**/node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Frontend app exclusions
+frontend/node_modules/
+frontend/.env
+frontend/.env.*
+frontend/dist/
+frontend/build/
